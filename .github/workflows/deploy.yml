@@ -45,7 +45,7 @@ jobs:
 
       - name: Install & build frontend
         working-directory: frontend
-	env:
+        env:
           VITE_API_URL: https://scopewise-api-py5l.onrender.com
         run: |
           npm ci
