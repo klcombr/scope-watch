@@ -93,8 +93,7 @@ export function SharePage({ token }: { token: string }) {
     <div className="share-page">
       <div className="share-container">
         <header className="share-header">
-          <strong>Scopewise</strong>
-          <span className="muted"> &middot; change order</span>
+          Scopewise
         </header>
 
         <main className="share-main">
@@ -130,7 +129,7 @@ export function SharePage({ token }: { token: string }) {
 
           {decision && (
             <div className={`share-result ${decision === 'APPROVED' ? 'share-result-ok' : 'share-result-no'}`}>
-              {decision === 'APPROVED' ? 'Aprovada com sucesso.' : 'Recusada.'}
+              {decision === 'APPROVED' ? 'Aprovada.' : 'Recusada.'}
             </div>
           )}
 
@@ -142,7 +141,7 @@ export function SharePage({ token }: { token: string }) {
         </main>
 
         <footer className="share-footer">
-          Gerenciado com Scopewise
+          Scopewise
         </footer>
       </div>
     </div>

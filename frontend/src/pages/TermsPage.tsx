@@ -2,62 +2,54 @@ export function TermsPage() {
   return (
     <div className="lp-content-page">
       <div className="container">
-        <a href="#/" className="lp-back">← Scopewise</a>
+        <a href="#/" className="lp-back">&larr; Scopewise</a>
         <h1>Termos de Uso</h1>
-        <p className="muted">Última atualização: setembro de 2026</p>
+        <p className="muted">Setembro de 2026</p>
 
         <section>
-          <h2>Uso do serviço</h2>
+          <h2>Uso do servico</h2>
           <p>
-            O Scopewise é uma ferramenta de controle de escopo para freelancers
-            e pequenas agências. O serviço é fornecido "como está", sem
+            O Scopewise e uma ferramenta de controle de escopo para freelancers
+            e pequenas agencias. O servico e fornecido "como esta", sem
             garantias de disponibilidade ininterrupta.
           </p>
         </section>
 
         <section>
-          <h2>Conta do usuário</h2>
+          <h2>Conta do usuario</h2>
           <p>
-            Você é responsável pela segurança da sua senha e por todas as
+            Voce e responsavel pela seguranca da sua senha e por todas as
             atividades que ocorrem na sua conta. Notifique-nos imediatamente
-            sobre uso não autorizado.
+            sobre uso nao autorizado.
           </p>
         </section>
 
         <section>
-          <h2>Uso aceitável</h2>
-          <p>Ao utilizar o Scopewise, você concorda em não:</p>
+          <h2>Uso aceitavel</h2>
+          <p>Ao utilizar o Scopewise, voce concorda em nao:</p>
           <ul>
-            <li>Tentar acessar contas de outros usuários</li>
-            <li>Utilizar o serviço para fins ilegais</li>
-            <li>Tentar contornar limites de taxa ou segurança</li>
-            <li>Automatizar acessos sem autorização</li>
+            <li>Tentar acessar contas de outros usuarios</li>
+            <li>Utilizar o servico para fins ilegais</li>
+            <li>Tentar contornar limites de taxa ou seguranca</li>
+            <li>Automatizar acessos sem autorizacao</li>
           </ul>
         </section>
 
         <section>
           <h2>Propriedade intelectual</h2>
           <p>
-            O código-fonte do Scopewise está disponível sob licença MIT. O
-            conteúdo que você cria no serviço (projetos, pedidos, change orders)
-            é de sua propriedade.
+            O codigo-fonte do Scopewise esta disponivel sob licenca MIT. O
+            conteudo que voce cria no servico (projetos, pedidos, change orders)
+            e de sua propriedade.
           </p>
         </section>
 
         <section>
-          <h2>Limitação de responsabilidade</h2>
+          <h2>Limitacao de responsabilidade</h2>
           <p>
-            O Scopewise não se responsabiliza por decisões tomadas com base nas
-            informações fornecidas pela ferramenta. O uso é de responsabilidade
-            do usuário.
-          </p>
-        </section>
-
-        <section>
-          <h2>Alterações</h2>
-          <p>
-            Estes termos podem ser atualizados. Alterações significativas serão
-            comunicadas através do serviço.
+            O Scopewise nao se responsabiliza por decisoes tomadas com base nas
+            informacoes fornecidas pela ferramenta. O uso e de responsabilidade
+            do usuario.
           </p>
         </section>
       </div>
