@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 /* ══════════════════════════════════════════════════
-   MOTION SYSTEM — Reusable animation primitives
+   MOTION SYSTEM — Refined animation primitives
    ══════════════════════════════════════════════════ */
 
+// ── Easings ────────────────────────────────────────
+const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
 // ── FadeIn ──────────────────────────────────────────
-// IntersectionObserver-based entrance animation
 
 interface FadeInProps {
   children: ReactNode;
@@ -52,8 +54,8 @@ export function FadeIn({
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'none' : `translate(${x}px, ${y}px)`,
-        transition: `opacity ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-        willChange: 'opacity, transform',
+        transition: `opacity ${duration}ms ${EASE_OUT} ${delay}ms, transform ${duration}ms ${EASE_OUT} ${delay}ms`,
+        ...(visible ? {} : { willChange: 'opacity, transform' }),
         ...style,
       }}
     >
@@ -63,15 +65,16 @@ export function FadeIn({
 }
 
 // ── StaggerChildren ─────────────────────────────────
-// Wraps children and staggers their entrance
+// Caps at maxItems to avoid motion saturation on long lists
 
 interface StaggerProps {
   children: ReactNode;
   stagger?: number;
   className?: string;
+  maxItems?: number;
 }
 
-export function StaggerChildren({ children, stagger = 80, className = '' }: StaggerProps) {
+export function StaggerChildren({ children, stagger = 80, className = '', maxItems = 6 }: StaggerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -92,26 +95,32 @@ export function StaggerChildren({ children, stagger = 80, className = '' }: Stag
   return (
     <div ref={ref} className={className}>
       {Array.isArray(children)
-        ? children.map((child, i) => (
-            <div
-              key={i}
-              style={{
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'none' : 'translateY(10px)',
-                transition: `opacity 400ms cubic-bezier(0.16, 1, 0.3, 1) ${i * stagger}ms, transform 400ms cubic-bezier(0.16, 1, 0.3, 1) ${i * stagger}ms`,
-                willChange: 'opacity, transform',
-              }}
-            >
-              {child}
-            </div>
-          ))
+        ? children.map((child, i) => {
+            const shouldAnimate = visible && i < maxItems;
+            const delay = i < maxItems ? i * stagger : 0;
+            return (
+              <div
+                key={i}
+                style={{
+                  opacity: shouldAnimate ? 1 : visible ? 1 : 0,
+                  transform: shouldAnimate ? 'none' : visible ? 'none' : 'translateY(8px)',
+                  transition: i < maxItems
+                    ? `opacity 350ms ${EASE_OUT} ${delay}ms, transform 350ms ${EASE_OUT} ${delay}ms`
+                    : 'none',
+                  willChange: !visible ? 'opacity, transform' : undefined,
+                }}
+              >
+                {child}
+              </div>
+            );
+          })
         : children}
     </div>
   );
 }
 
 // ── CountUp ─────────────────────────────────────────
-// Animates a number from 0 to target
+// Uses prevValue ref to avoid re-triggering on parent rerenders
 
 interface CountUpProps {
   value: number;
@@ -135,12 +144,13 @@ export function CountUp({
   const ref = useRef<HTMLSpanElement>(null);
   const [displayed, setDisplayed] = useState(0);
   const [started, setStarted] = useState(false);
+  const prevValue = useRef(value);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) { setDisplayed(value); return; }
+    if (prefersReduced) { setDisplayed(value); prevValue.current = value; return; }
 
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setStarted(true); obs.disconnect(); } },
@@ -152,6 +162,13 @@ export function CountUp({
 
   useEffect(() => {
     if (!started) return;
+
+    const from = prevValue.current;
+    const to = value;
+    prevValue.current = value;
+
+    if (from === to) return;
+
     const start = performance.now();
     let raf: number;
 
@@ -159,7 +176,7 @@ export function CountUp({
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayed(eased * value);
+      setDisplayed(from + (to - from) * eased);
       if (progress < 1) raf = requestAnimationFrame(tick);
     }
 
@@ -175,32 +192,51 @@ export function CountUp({
 }
 
 // ── useMousePosition ────────────────────────────────
-// Normalized mouse position (-1 to 1)
+// Smoothed with lerp — object has "mass"
 
-export function useMousePosition() {
+export function useMousePosition(smoothing = 0.08) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const target = useRef({ x: 0, y: 0 });
+  const current = useRef({ x: 0, y: 0 });
+  const raf = useRef<number>(0);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) return;
 
     function onMove(e: MouseEvent) {
-      setPos({
+      target.current = {
         x: (e.clientX / window.innerWidth) * 2 - 1,
         y: (e.clientY / window.innerHeight) * 2 - 1,
-      });
+      };
     }
+
+    function tick() {
+      const dx = target.current.x - current.current.x;
+      const dy = target.current.y - current.current.y;
+      current.current.x += dx * smoothing;
+      current.current.y += dy * smoothing;
+
+      if (Math.abs(dx) > 0.0001 || Math.abs(dy) > 0.0001) {
+        setPos({ x: current.current.x, y: current.current.y });
+      }
+      raf.current = requestAnimationFrame(tick);
+    }
+
+    raf.current = requestAnimationFrame(tick);
     window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      window.removeEventListener('mousemove', onMove);
+    };
+  }, [smoothing]);
 
   return pos;
 }
 
 // ── useScrollProgress ───────────────────────────────
-// Element scroll progress 0–1
 
-export function useScrollProgress(threshold = 0) {
+export function useScrollProgress() {
   const ref = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -220,13 +256,13 @@ export function useScrollProgress(threshold = 0) {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [threshold]);
+  }, []);
 
   return { ref, progress };
 }
 
 // ── TiltCard ────────────────────────────────────────
-// Subtle 3D tilt on mouse hover
+// Smoothed lerp tilt with elevation + shadow
 
 interface TiltCardProps {
   children: ReactNode;
@@ -237,7 +273,11 @@ interface TiltCardProps {
 
 export function TiltCard({ children, className = '', style, maxTilt = 4 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const targetRot = useRef({ x: 0, y: 0 });
+  const currentRot = useRef({ x: 0, y: 0 });
+  const raf = useRef<number>(0);
   const [transform, setTransform] = useState('');
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -249,15 +289,37 @@ export function TiltCard({ children, className = '', style, maxTilt = 4 }: TiltC
       const rect = el!.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width - 0.5;
       const y = (e.clientY - rect.top) / rect.height - 0.5;
-      setTransform(`perspective(800px) rotateY(${x * maxTilt}deg) rotateX(${-y * maxTilt}deg) translateZ(4px)`);
+      targetRot.current = { x: x * maxTilt, y: -y * maxTilt };
     }
 
-    function onLeave() { setTransform(''); }
+    function onEnter() { setHovered(true); }
+    function onLeave() {
+      setHovered(false);
+      targetRot.current = { x: 0, y: 0 };
+    }
 
+    function tick() {
+      const dx = targetRot.current.x - currentRot.current.x;
+      const dy = targetRot.current.y - currentRot.current.y;
+      currentRot.current.x += dx * 0.12;
+      currentRot.current.y += dy * 0.12;
+
+      if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+        const rx = currentRot.current.x;
+        const ry = currentRot.current.y;
+        setTransform(`perspective(800px) rotateY(${ry}deg) rotateX(${rx}deg) translateZ(4px)`);
+      }
+      raf.current = requestAnimationFrame(tick);
+    }
+
+    raf.current = requestAnimationFrame(tick);
     el.addEventListener('mousemove', onMove, { passive: true });
+    el.addEventListener('mouseenter', onEnter);
     el.addEventListener('mouseleave', onLeave);
     return () => {
+      cancelAnimationFrame(raf.current);
       el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseenter', onEnter);
       el.removeEventListener('mouseleave', onLeave);
     };
   }, [maxTilt]);
@@ -268,9 +330,12 @@ export function TiltCard({ children, className = '', style, maxTilt = 4 }: TiltC
       className={className}
       style={{
         transform: transform || 'perspective(800px)',
-        transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        willChange: 'transform',
+        transition: hovered
+          ? 'transform 80ms linear'
+          : `transform 350ms ${EASE_OUT}`,
+        willChange: hovered ? 'transform' : undefined,
         transformStyle: 'preserve-3d',
+        boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.3)' : undefined,
         ...style,
       }}
     >

@@ -174,7 +174,7 @@ input:focus, textarea:focus, select:focus {
   background: transparent;
   border: 2px solid var(--border);
   color: var(--text-secondary);
-  transition: all var(--transition);
+  transition: all 150ms var(--transition);
   white-space: nowrap;
 }
 
@@ -182,18 +182,21 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--text);
   color: var(--text);
   opacity: 1;
+  box-shadow: 2px 2px 0 var(--border);
+  transform: translate(-1px, -1px);
 }
 
 .btn:active {
   transform: translate(2px, 2px);
   box-shadow: none;
+  transition-duration: 60ms;
 }
 
 .btn-primary {
   background: var(--text);
   border-color: var(--text);
   color: var(--black);
-  box-shadow: var(--shadow);
+  box-shadow: 4px 4px 0 var(--border);
 }
 
 .btn-primary:hover {
@@ -201,11 +204,14 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--gray);
   color: var(--black);
   opacity: 1;
+  box-shadow: 6px 6px 0 var(--border);
+  transform: translate(-2px, -2px);
 }
 
 .btn-primary:active {
-  box-shadow: none;
-  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 var(--border);
+  transform: translate(2px, 2px);
+  transition-duration: 60ms;
 }
 
 .btn-danger {
@@ -217,6 +223,8 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--text);
   color: var(--text);
   opacity: 1;
+  box-shadow: 2px 2px 0 var(--border);
+  transform: translate(-1px, -1px);
 }
 
 .btn-sm {
