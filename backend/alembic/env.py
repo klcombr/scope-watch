@@ -13,6 +13,12 @@ config = context.config
 # Set database URL from environment variable if available.
 database_url = os.environ.get("DATABASE_URL")
 if database_url:
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1,
+        )
     config.set_main_option("sqlalchemy.url", database_url)
 
 if config.config_file_name is not None:
