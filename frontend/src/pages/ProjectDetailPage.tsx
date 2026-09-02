@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
+import { FadeIn, StaggerChildren, CountUp, TiltCard } from '../lib/motion';
 import type { ChangeOrder, Project, RequestItem } from '../types';
 import { CLASSIFICATION_LABELS, ORDER_STATUS_LABELS } from '../types';
 
@@ -125,53 +126,55 @@ function ChangeOrderRow({
   }
 
   return (
-    <div style={{ padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <strong style={{ fontSize: 15, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{order.title}</strong>
-            <span className="tag tag-order">{ORDER_STATUS_LABELS[order.status]}</span>
+    <TiltCard maxTilt={1.5}>
+      <div style={{ padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <strong style={{ fontSize: 15, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{order.title}</strong>
+              <span className="tag tag-order">{ORDER_STATUS_LABELS[order.status]}</span>
+            </div>
+            {order.description && (
+              <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>{order.description}</div>
+            )}
+            <div className="muted" style={{ fontSize: 12, fontFamily: 'var(--mono)' }}>
+              {order.hours}h x R$ {money(order.rate)}/h
+              {order.requests.length > 0 && <> &middot; {order.requests.length} pedido(s)</>}
+            </div>
           </div>
-          {order.description && (
-            <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>{order.description}</div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', fontFamily: 'var(--mono)' }}>
+              R$ <CountUp value={order.amount} duration={600} />
+            </div>
+          </div>
+        </div>
+        <div className="row" style={{ gap: 8, marginTop: 8 }}>
+          {order.status === 'DRAFT' && (
+            <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('SENT')}>
+              Enviar
+            </button>
           )}
-          <div className="muted" style={{ fontSize: 12, fontFamily: 'var(--mono)' }}>
-            {order.hours}h x R$ {money(order.rate)}/h
-            {order.requests.length > 0 && <> &middot; {order.requests.length} pedido(s)</>}
-          </div>
-        </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', fontFamily: 'var(--mono)' }}>
-            R$ {money(order.amount)}
-          </div>
+          {order.status === 'SENT' && (
+            <>
+              <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('APPROVED')}>
+                Aprovar
+              </button>
+              <button className="btn btn-sm btn-danger" disabled={busy} onClick={() => setStatus('REJECTED')}>
+                Recusar
+              </button>
+            </>
+          )}
+          {order.status === 'APPROVED' && (
+            <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('PAID')}>
+              Pago
+            </button>
+          )}
+          <button className="btn btn-sm" onClick={copyShareLink}>
+            {copied ? 'Copiado!' : 'Link'}
+          </button>
         </div>
       </div>
-      <div className="row" style={{ gap: 8, marginTop: 8 }}>
-        {order.status === 'DRAFT' && (
-          <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('SENT')}>
-            Enviar
-          </button>
-        )}
-        {order.status === 'SENT' && (
-          <>
-            <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('APPROVED')}>
-              Aprovar
-            </button>
-            <button className="btn btn-sm btn-danger" disabled={busy} onClick={() => setStatus('REJECTED')}>
-              Recusar
-            </button>
-          </>
-        )}
-        {order.status === 'APPROVED' && (
-          <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('PAID')}>
-            Pago
-          </button>
-        )}
-        <button className="btn btn-sm" onClick={copyShareLink}>
-          {copied ? 'Copiado!' : 'Link'}
-        </button>
-      </div>
-    </div>
+    </TiltCard>
   );
 }
 
@@ -240,70 +243,72 @@ function NewChangeOrderForm({
   }
 
   return (
-    <div style={{ marginTop: 16 }}>
-      {error && <div className="error-banner">{error}</div>}
-      <form onSubmit={submit}>
-        <h4 style={{ margin: '0 0 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
-          Nova change order
-        </h4>
-        {outOfScope.length > 0 && (
+    <FadeIn y={8} duration={250}>
+      <div style={{ marginTop: 16 }}>
+        {error && <div className="error-banner">{error}</div>}
+        <form onSubmit={submit}>
+          <h4 style={{ margin: '0 0 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
+            Nova change order
+          </h4>
+          {outOfScope.length > 0 && (
+            <div className="form-group">
+              <label>Pedidos vinculados</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {outOfScope.map((r) => (
+                  <label
+                    key={r.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: selected.includes(r.id) ? 'var(--surface-hover)' : 'var(--bg)',
+                      border: `2px solid ${selected.includes(r.id) ? 'var(--text)' : 'var(--border)'}`,
+                      cursor: 'pointer',
+                      fontSize: 13,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(r.id)}
+                      onChange={() => toggle(r.id)}
+                      style={{ accentColor: 'var(--text)' }}
+                    />
+                    {r.text.length > 80 ? r.text.slice(0, 80) + '...' : r.text}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="form-group">
-            <label>Pedidos vinculados</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {outOfScope.map((r) => (
-                <label
-                  key={r.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 12px',
-                    background: selected.includes(r.id) ? 'var(--surface-hover)' : 'var(--bg)',
-                    border: `2px solid ${selected.includes(r.id) ? 'var(--text)' : 'var(--border)'}`,
-                    cursor: 'pointer',
-                    fontSize: 13,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(r.id)}
-                    onChange={() => toggle(r.id)}
-                    style={{ accentColor: 'var(--text)' }}
-                  />
-                  {r.text.length > 80 ? r.text.slice(0, 80) + '...' : r.text}
-                </label>
-              ))}
+            <label>Titulo</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} placeholder="Ex.: Sistema de reservas" />
+          </div>
+          <div className="row">
+            <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
+              <label>Horas</label>
+              <input type="number" value={hours} onChange={(e) => setHours(e.target.value)} min={0.25} step="0.25" required />
+            </div>
+            <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
+              <label>Valor/hora (R$)</label>
+              <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} min={0} step="0.01" />
             </div>
           </div>
-        )}
-        <div className="form-group">
-          <label>Titulo</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} placeholder="Ex.: Sistema de reservas" />
-        </div>
-        <div className="row">
-          <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
-            <label>Horas</label>
-            <input type="number" value={hours} onChange={(e) => setHours(e.target.value)} min={0.25} step="0.25" required />
+          <div className="form-group">
+            <label>Descricao</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={10000} />
           </div>
-          <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
-            <label>Valor/hora (R$)</label>
-            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} min={0} step="0.01" />
+          <div className="row">
+            <button type="submit" className="btn btn-primary btn-sm" disabled={busy || !title.trim() || !(Number(hours) > 0)}>
+              {busy ? 'Criando...' : 'Criar'}
+            </button>
+            <button type="button" className="btn btn-sm" onClick={() => setOpen(false)}>
+              Cancelar
+            </button>
           </div>
-        </div>
-        <div className="form-group">
-          <label>Descricao</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={10000} />
-        </div>
-        <div className="row">
-          <button type="submit" className="btn btn-primary btn-sm" disabled={busy || !title.trim() || !(Number(hours) > 0)}>
-            {busy ? 'Criando...' : 'Criar'}
-          </button>
-          <button type="button" className="btn btn-sm" onClick={() => setOpen(false)}>
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </FadeIn>
   );
 }
 
@@ -359,89 +364,97 @@ export function ProjectDetailPage({ projectId }: { projectId: number }) {
 
       <div className="container" style={{ paddingTop: 32, paddingBottom: 64 }}>
         {stats && (
-          <div className="stat-grid">
-            <div className="stat">
-              <div className="label">Pedidos abertos</div>
-              <div className="value">{openRequests.length}</div>
-            </div>
-            <div className="stat">
-              <div className="label">Fora de escopo</div>
-              <div className="value">
-                {openRequests.filter((r) => r.classification === 'OUT_OF_SCOPE').length}
+          <FadeIn delay={100}>
+            <div className="stat-grid">
+              <div className="stat">
+                <div className="label">Pedidos abertos</div>
+                <div className="value"><CountUp value={openRequests.length} duration={400} /></div>
+              </div>
+              <div className="stat">
+                <div className="label">Fora de escopo</div>
+                <div className="value">
+                  <CountUp value={openRequests.filter((r) => r.classification === 'OUT_OF_SCOPE').length} duration={500} />
+                </div>
+              </div>
+              <div className="stat">
+                <div className="label">A receber</div>
+                <div className="value"><CountUp value={stats.pending_amount} prefix="R$ " duration={700} /></div>
+              </div>
+              <div className="stat">
+                <div className="label">Aprovado</div>
+                <div className="value"><CountUp value={stats.approved_amount} prefix="R$ " duration={700} /></div>
               </div>
             </div>
-            <div className="stat">
-              <div className="label">A receber</div>
-              <div className="value">R$ {money(stats.pending_amount)}</div>
-            </div>
-            <div className="stat">
-              <div className="label">Aprovado</div>
-              <div className="value">R$ {money(stats.approved_amount)}</div>
-            </div>
-          </div>
+          </FadeIn>
         )}
 
         {/* Requests section */}
-        <div className="card">
-          <div className="section-header">
-            <h3>Pedidos do cliente</h3>
+        <FadeIn delay={200}>
+          <div className="card">
+            <div className="section-header">
+              <h3>Pedidos do cliente</h3>
+            </div>
+            <AddRequestForm projectId={projectId} onAdded={refresh} />
+            {project.requests.length === 0 ? (
+              <div className="empty">
+                Registre aqui qualquer pedido extra do cliente.<br />
+                <span style={{ fontSize: 12 }}>Marque como <strong>fora de escopo</strong> para transformar em cobranca.</span>
+              </div>
+            ) : (
+              <StaggerChildren stagger={60}>
+                {[...project.requests]
+                  .sort((a, b) => b.created_at.localeCompare(a.created_at))
+                  .map((r) => (
+                    <RequestRow key={r.id} req={r} onClassified={classifyRequest} />
+                  ))}
+              </StaggerChildren>
+            )}
           </div>
-          <AddRequestForm projectId={projectId} onAdded={refresh} />
-          {project.requests.length === 0 ? (
-            <div className="empty">
-              Registre aqui qualquer pedido extra do cliente.<br />
-              <span style={{ fontSize: 12 }}>Marque como <strong>fora de escopo</strong> para transformar em cobranca.</span>
-            </div>
-          ) : (
-            <div>
-              {[...project.requests]
-                .sort((a, b) => b.created_at.localeCompare(a.created_at))
-                .map((r) => (
-                  <RequestRow key={r.id} req={r} onClassified={classifyRequest} />
-                ))}
-            </div>
-          )}
-        </div>
+        </FadeIn>
 
         {/* Change Orders section */}
-        <div className="card">
-          <div className="section-header">
-            <h3>Change orders</h3>
-            <span className="muted" style={{ fontFamily: 'var(--mono)' }}>
-              R$ {money(project.hourly_rate)}/h
-            </span>
+        <FadeIn delay={300}>
+          <div className="card">
+            <div className="section-header">
+              <h3>Change orders</h3>
+              <span className="muted" style={{ fontFamily: 'var(--mono)' }}>
+                R$ {money(project.hourly_rate)}/h
+              </span>
+            </div>
+            {project.change_orders.length === 0 ? (
+              <div className="empty">
+                Marque um pedido como <strong>fora de escopo</strong> e crie a primeira change order.
+              </div>
+            ) : (
+              <div>
+                {[...project.change_orders]
+                  .sort((a, b) => b.created_at.localeCompare(a.created_at))
+                  .map((o) => <ChangeOrderRow key={o.id} order={o} project={project} refresh={refresh} />)}
+              </div>
+            )}
+            <NewChangeOrderForm project={project} requests={project.requests} onCreated={refresh} />
           </div>
-          {project.change_orders.length === 0 ? (
-            <div className="empty">
-              Marque um pedido como <strong>fora de escopo</strong> e crie a primeira change order.
-            </div>
-          ) : (
-            <div>
-              {[...project.change_orders]
-                .sort((a, b) => b.created_at.localeCompare(a.created_at))
-                .map((o) => <ChangeOrderRow key={o.id} order={o} project={project} refresh={refresh} />)}
-            </div>
-          )}
-          <NewChangeOrderForm project={project} requests={project.requests} onCreated={refresh} />
-        </div>
+        </FadeIn>
 
         {/* Scope section */}
-        <div className="card">
-          <div className="section-header">
-            <h3>Escopo acordado</h3>
+        <FadeIn delay={400}>
+          <div className="card">
+            <div className="section-header">
+              <h3>Escopo acordado</h3>
+            </div>
+            {project.scope_entries.length === 0 ? (
+              <div className="empty">Nenhum item de escopo registrado.</div>
+            ) : (
+              <StaggerChildren stagger={40}>
+                {project.scope_entries.map((s) => (
+                  <li key={s.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 14, listStyle: 'none' }}>
+                    {s.text}
+                  </li>
+                ))}
+              </StaggerChildren>
+            )}
           </div>
-          {project.scope_entries.length === 0 ? (
-            <div className="empty">Nenhum item de escopo registrado.</div>
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
-              {project.scope_entries.map((s) => (
-                <li key={s.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
-                  {s.text}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

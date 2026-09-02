@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../lib/auth';
+import { FadeIn } from '../lib/motion';
 
 export function LoginPage() {
   const { login, register } = useAuth();
@@ -27,72 +28,81 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>Scopewise</h1>
-        <p className="subtitle">Controle de escopo para freelancers.</p>
+        <FadeIn delay={0} y={16} duration={400}>
+          <h1>Scopewise</h1>
+        </FadeIn>
 
-        <div className="auth-toggle">
-          <button
-            type="button"
-            className={mode === 'login' ? 'active' : ''}
-            onClick={() => setMode('login')}
-          >
-            Entrar
-          </button>
-          <button
-            type="button"
-            className={mode === 'register' ? 'active' : ''}
-            onClick={() => setMode('register')}
-          >
-            Criar conta
-          </button>
-        </div>
+        <FadeIn delay={80} y={12} duration={400}>
+          <p className="subtitle">Controle de escopo para freelancers.</p>
+        </FadeIn>
 
-        {error && <div className="error-banner">{error}</div>}
+        <FadeIn delay={160} y={12} duration={400}>
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={mode === 'login' ? 'active' : ''}
+              onClick={() => setMode('login')}
+            >
+              Entrar
+            </button>
+            <button
+              type="button"
+              className={mode === 'register' ? 'active' : ''}
+              onClick={() => setMode('register')}
+            >
+              Criar conta
+            </button>
+          </div>
 
-        <form onSubmit={onSubmit}>
-          {mode === 'register' && (
+          {error && <div className="error-banner">{error}</div>}
+
+          <form onSubmit={onSubmit}>
+            {mode === 'register' && (
+              <div className="form-group">
+                <label>Nome</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  maxLength={120}
+                  placeholder="Seu nome"
+                />
+              </div>
+            )}
             <div className="form-group">
-              <label>Nome</label>
+              <label>Email</label>
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                maxLength={120}
-                placeholder="Seu nome"
+                maxLength={255}
+                placeholder="voce@email.com"
               />
             </div>
-          )}
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              maxLength={255}
-              placeholder="voce@email.com"
-            />
-          </div>
-          <div className="form-group">
-            <label>Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              maxLength={128}
-              placeholder={mode === 'register' ? 'Minimo 8 caracteres' : 'Sua senha'}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={busy} style={{ width: '100%', padding: '12px' }}>
-            {busy ? 'Aguarde...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
-          </button>
-        </form>
+            <div className="form-group">
+              <label>Senha</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                maxLength={128}
+                placeholder={mode === 'register' ? 'Minimo 8 caracteres' : 'Sua senha'}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={busy} style={{ width: '100%', padding: '12px' }}>
+              {busy ? 'Aguarde...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
+            </button>
+          </form>
+        </FadeIn>
 
-        <p className="auth-footer">
-          Gratis para comecar.
-        </p>
+        <FadeIn delay={300} y={8} duration={300}>
+          <p className="auth-footer">
+            Gratis para comecar.
+          </p>
+        </FadeIn>
       </div>
     </div>
   );

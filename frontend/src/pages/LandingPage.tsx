@@ -1,36 +1,59 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/auth';
+import { FadeIn, StaggerChildren } from '../lib/motion';
+import { ScopeGraph } from '../components/ScopeGraph';
+import { ChangeOrder3D } from '../components/ChangeOrder3D';
 
 function Hero() {
   const { user } = useAuth();
   return (
     <section className="lp-hero">
       <div className="container">
-        <h1>Stop working<br />for free.</h1>
-        <p className="lp-hero-sub">
-          Registre pedidos do cliente, identifique o que esta fora do escopo e
-          transforme em change orders cobraveis.
-        </p>
-        <div className="lp-hero-cta">
-          {user ? (
-            <a href="#projects" className="btn btn-primary lp-btn-lg">
-              Acessar projetos
-            </a>
-          ) : (
-            <a href="#register" className="btn btn-primary lp-btn-lg">
-              Comecar gratis
-            </a>
-          )}
-          <span className="lp-hero-note">Gratis &middot; 3 projetos &middot; Sem cartao</span>
-        </div>
+        <FadeIn delay={0} duration={600} y={20}>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text-muted)', marginBottom: '16px', fontFamily: 'var(--mono)' }}>
+            SCOPEWISE v1.0
+          </div>
+        </FadeIn>
 
-        <div className="lp-flow">
-          <div className="lp-flow-step">Pedido extra</div>
-          <div className="lp-flow-step">Fora do escopo</div>
-          <div className="lp-flow-step">Change order</div>
-          <div className="lp-flow-step">Aprovacao</div>
-          <div className="lp-flow-step">Receita</div>
-        </div>
+        <FadeIn delay={100} duration={700} y={24}>
+          <h1>Stop working<br />for free.</h1>
+        </FadeIn>
+
+        <FadeIn delay={250} duration={600} y={16}>
+          <p className="lp-hero-sub">
+            Registre pedidos do cliente, identifique o que esta fora do escopo e
+            transforme em change orders cobraveis.
+          </p>
+        </FadeIn>
+
+        <FadeIn delay={350} duration={500} y={12}>
+          <div className="lp-hero-cta">
+            {user ? (
+              <a href="#projects" className="btn btn-primary lp-btn-lg">
+                Acessar projetos
+              </a>
+            ) : (
+              <a href="#register" className="btn btn-primary lp-btn-lg">
+                Comecar gratis
+              </a>
+            )}
+            <span className="lp-hero-note">Gratis &middot; 3 projetos &middot; Sem cartao</span>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={500} duration={800} y={0}>
+          <ScopeGraph />
+        </FadeIn>
+
+        <FadeIn delay={700} duration={500} y={10}>
+          <div className="lp-flow">
+            <div className="lp-flow-step">Pedido extra</div>
+            <div className="lp-flow-step">Fora do escopo</div>
+            <div className="lp-flow-step">Change order</div>
+            <div className="lp-flow-step">Aprovacao</div>
+            <div className="lp-flow-step">Receita</div>
+          </div>
+        </FadeIn>
       </div>
     </section>
   );
@@ -40,8 +63,10 @@ function Problem() {
   return (
     <section className="lp-section">
       <div className="container">
-        <h2>O problema</h2>
-        <div className="lp-problem-grid">
+        <FadeIn>
+          <h2>O problema</h2>
+        </FadeIn>
+        <StaggerChildren stagger={120}>
           <div className="lp-problem-card">
             <div className="lp-problem-icon">01</div>
             <h3>"So mais uma coisinha"</h3>
@@ -66,7 +91,7 @@ function Problem() {
               sem registro, sem chance.
             </p>
           </div>
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
@@ -76,8 +101,10 @@ function Solution() {
   return (
     <section className="lp-section">
       <div className="container">
-        <h2>Como funciona</h2>
-        <div className="lp-steps">
+        <FadeIn>
+          <h2>Como funciona</h2>
+        </FadeIn>
+        <StaggerChildren stagger={150}>
           <div className="lp-step">
             <div className="lp-step-num">01</div>
             <h3>Registre</h3>
@@ -102,7 +129,13 @@ function Solution() {
               Envie ao cliente para aprovacao.
             </p>
           </div>
-        </div>
+        </StaggerChildren>
+
+        <FadeIn delay={300} y={20}>
+          <div style={{ marginTop: '48px' }}>
+            <ChangeOrder3D />
+          </div>
+        </FadeIn>
       </div>
     </section>
   );
@@ -112,8 +145,10 @@ function Features() {
   return (
     <section className="lp-section">
       <div className="container">
-        <h2>Controle total</h2>
-        <div className="lp-features">
+        <FadeIn>
+          <h2>Controle total</h2>
+        </FadeIn>
+        <StaggerChildren stagger={100}>
           <div className="lp-feature">
             <h3>Pedidos do cliente</h3>
             <p>
@@ -142,7 +177,7 @@ function Features() {
               foi pago. Tudo em R$.
             </p>
           </div>
-        </div>
+        </StaggerChildren>
       </div>
     </section>
   );
@@ -177,20 +212,24 @@ function FAQ() {
   return (
     <section className="lp-section">
       <div className="container">
-        <h2>FAQ</h2>
+        <FadeIn>
+          <h2>FAQ</h2>
+        </FadeIn>
         <div className="lp-faq-list">
           {faqs.map((faq, i) => (
-            <div key={i} className="lp-faq-item">
-              <button
-                className="lp-faq-q"
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={openIndex === i}
-              >
-                {faq.q}
-                <span className="lp-faq-arrow">{openIndex === i ? '\u2212' : '+'}</span>
-              </button>
-              {openIndex === i && <p className="lp-faq-a">{faq.a}</p>}
-            </div>
+            <FadeIn key={i} delay={i * 60}>
+              <div className="lp-faq-item">
+                <button
+                  className="lp-faq-q"
+                  onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                  aria-expanded={openIndex === i}
+                >
+                  {faq.q}
+                  <span className="lp-faq-arrow">{openIndex === i ? '\u2212' : '+'}</span>
+                </button>
+                {openIndex === i && <p className="lp-faq-a">{faq.a}</p>}
+              </div>
+            </FadeIn>
           ))}
         </div>
       </div>

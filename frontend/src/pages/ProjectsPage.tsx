@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { FadeIn, StaggerChildren, CountUp } from '../lib/motion';
 import type { Project } from '../types';
 
 function NewProjectForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
@@ -35,52 +36,54 @@ function NewProjectForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
   }
 
   return (
-    <div style={{ marginBottom: 32 }}>
-      {error && <div className="error-banner">{error}</div>}
-      <form onSubmit={submit}>
-        <div className="form-group">
-          <label>Nome do projeto</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            maxLength={200}
-            placeholder="Ex.: Redesign do site da Boutique"
-          />
-        </div>
-        <div className="form-group">
-          <label>Valor da hora (R$)</label>
-          <input
-            type="number"
-            value={rate}
-            onChange={(e) => setRate(e.target.value)}
-            min={0}
-            step="0.01"
-          />
-        </div>
-        <div className="form-group">
-          <label>Escopo acordado</label>
-          <textarea
-            value={scopeText}
-            onChange={(e) => setScopeText(e.target.value)}
-            placeholder={'Pagina inicial\n5 paginas internas\nFormulario de contato'}
-          />
-          <span className="muted" style={{ marginTop: 4, display: 'block' }}>Um item por linha</span>
-        </div>
-        <div className="row">
-          <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Criando...' : 'Criar projeto'}
-          </button>
-          <button type="button" className="btn" onClick={onCancel}>
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+    <FadeIn y={12} duration={300}>
+      <div style={{ marginBottom: 32 }}>
+        {error && <div className="error-banner">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label>Nome do projeto</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={200}
+              placeholder="Ex.: Redesign do site da Boutique"
+            />
+          </div>
+          <div className="form-group">
+            <label>Valor da hora (R$)</label>
+            <input
+              type="number"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              min={0}
+              step="0.01"
+            />
+          </div>
+          <div className="form-group">
+            <label>Escopo acordado</label>
+            <textarea
+              value={scopeText}
+              onChange={(e) => setScopeText(e.target.value)}
+              placeholder={'Pagina inicial\n5 paginas internas\nFormulario de contato'}
+            />
+            <span className="muted" style={{ marginTop: 4, display: 'block' }}>Um item por linha</span>
+          </div>
+          <div className="row">
+            <button type="submit" className="btn btn-primary" disabled={busy}>
+              {busy ? 'Criando...' : 'Criar projeto'}
+            </button>
+            <button type="button" className="btn" onClick={onCancel}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </FadeIn>
   );
 }
 
-function ProjectRow({ project }: { project: Project }) {
+function ProjectRow({ project, index }: { project: Project; index: number }) {
   const outOfScope = project.requests.filter((r) => r.classification === 'OUT_OF_SCOPE').length;
   const pending = project.change_orders
     .filter((o) => o.status === 'SENT' || o.status === 'APPROVED')
@@ -108,7 +111,7 @@ function ProjectRow({ project }: { project: Project }) {
         )}
         {pending > 0 ? (
           <span className="tag tag-funded">
-            R$ {pending.toLocaleString('pt-BR')}
+            R$ <CountUp value={pending} prefix="" suffix="" duration={600 + index * 100} />
           </span>
         ) : (
           <span className="tag">Sem pendencias</span>
@@ -135,13 +138,23 @@ export function ProjectsPage() {
 
   useEffect(load, []);
 
+  const totalPending = projects
+    ? projects.reduce((sum, p) =>
+        sum + p.change_orders
+          .filter((o) => o.status === 'SENT' || o.status === 'APPROVED')
+          .reduce((s, o) => s + o.amount, 0), 0)
+    : 0;
+
+  const totalOutOfScope = projects
+    ? projects.reduce((sum, p) =>
+        sum + p.requests.filter((r) => r.classification === 'OUT_OF_SCOPE').length, 0)
+    : 0;
+
   return (
     <div className="page-enter">
       <div className="topbar">
         <div className="container topbar-inner">
-          <span className="brand">
-            Scopewise
-          </span>
+          <span className="brand">Scopewise</span>
           <div className="row" style={{ gap: 12 }}>
             <span className="muted">{user?.name}</span>
             <button className="btn btn-sm" onClick={logout}>Sair</button>
@@ -151,6 +164,35 @@ export function ProjectsPage() {
 
       <div className="container" style={{ paddingTop: 40, paddingBottom: 64 }}>
         {error && <div className="error-banner">{error}</div>}
+
+        {/* Overview stats */}
+        {projects && projects.length > 0 && (
+          <FadeIn delay={100}>
+            <div className="stat-grid" style={{ marginBottom: 40 }}>
+              <div className="stat">
+                <div className="label">Projetos</div>
+                <div className="value"><CountUp value={projects.length} duration={500} /></div>
+              </div>
+              <div className="stat">
+                <div className="label">Fora de escopo</div>
+                <div className="value"><CountUp value={totalOutOfScope} duration={600} /></div>
+              </div>
+              <div className="stat">
+                <div className="label">A receber</div>
+                <div className="value"><CountUp value={totalPending} prefix="R$ " duration={800} /></div>
+              </div>
+              <div className="stat">
+                <div className="label">Change orders</div>
+                <div className="value">
+                  <CountUp
+                    value={projects.reduce((s, p) => s + p.change_orders.length, 0)}
+                    duration={500}
+                  />
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        )}
 
         <div className="section-header" style={{ marginBottom: 24 }}>
           <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
@@ -169,14 +211,20 @@ export function ProjectsPage() {
           {projects === null ? (
             <div className="empty">Carregando...</div>
           ) : projects.length === 0 ? (
-            <div className="empty">
-              Nenhum projeto.<br />
-              <span style={{ fontSize: 12 }}>
-                Crie um para comecar a acompanhar pedidos.
-              </span>
-            </div>
+            <FadeIn>
+              <div className="empty">
+                Nenhum projeto.<br />
+                <span style={{ fontSize: 12 }}>
+                  Crie um para comecar a acompanhar pedidos.
+                </span>
+              </div>
+            </FadeIn>
           ) : (
-            projects.map((p) => <ProjectRow key={p.id} project={p} />)
+            <StaggerChildren stagger={80}>
+              {projects.map((p, i) => (
+                <ProjectRow key={p.id} project={p} index={i} />
+              ))}
+            </StaggerChildren>
           )}
         </div>
       </div>

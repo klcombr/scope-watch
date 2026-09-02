@@ -1258,3 +1258,246 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
+
+/* ══════════════════════════════════════════════════
+   3D + MOTION SYSTEM
+   ══════════════════════════════════════════════════ */
+
+/* ── Perspective containers ──────────────────────── */
+
+.perspective-1000 {
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* ── Microinteractions: Buttons ──────────────────── */
+
+.btn {
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease,
+    opacity 150ms ease;
+}
+
+.btn:active:not([disabled]) {
+  transform: translate(2px, 2px);
+  box-shadow: none !important;
+}
+
+.btn-primary:active:not([disabled]) {
+  transform: translate(4px, 4px);
+  box-shadow: none !important;
+}
+
+/* ── Microinteractions: Links ────────────────────── */
+
+.link-hover {
+  position: relative;
+  display: inline;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--text);
+  transition: width 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+/* ── 3D Depth layers ─────────────────────────────── */
+
+.depth-1 { transform: translateZ(1px); }
+.depth-2 { transform: translateZ(2px); }
+.depth-4 { transform: translateZ(4px); }
+
+/* ── Page transition ─────────────────────────────── */
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter {
+  animation: pageIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── 3D Card hover ───────────────────────────────── */
+
+.card-3d {
+  transition:
+    transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover {
+  transform: translateZ(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── 3D Floating animation ───────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ── Stagger delays (utility) ────────────────────── */
+
+.stagger-1 { transition-delay: 100ms; }
+.stagger-2 { transition-delay: 200ms; }
+.stagger-3 { transition-delay: 300ms; }
+.stagger-4 { transition-delay: 400ms; }
+.stagger-5 { transition-delay: 500ms; }
+.stagger-6 { transition-delay: 600ms; }
+
+/* ── Scroll-triggered reveal ─────────────────────── */
+
+@keyframes revealLine {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.reveal-line {
+  transform-origin: left;
+  animation: revealLine 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── 3D Document stack ───────────────────────────── */
+
+.doc-stack {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.doc-stack::before,
+.doc-stack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.doc-stack::before {
+  transform: translateZ(-10px) translate(3px, 3px);
+  opacity: 0.4;
+}
+
+.doc-stack::after {
+  transform: translateZ(-20px) translate(6px, 6px);
+  opacity: 0.2;
+}
+
+/* ── Hero grid animation ─────────────────────────── */
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
+}
+
+.hero-grid-animated > div {
+  animation: gridPulse 8s ease-in-out infinite;
+}
+
+.hero-grid-animated > div:nth-child(2n) {
+  animation-delay: -2s;
+}
+
+.hero-grid-animated > div:nth-child(3n) {
+  animation-delay: -4s;
+}
+
+/* ── Status transition ───────────────────────────── */
+
+@keyframes statusPulse {
+  0% { box-shadow: 0 0 0 0 var(--border-strong); }
+  70% { box-shadow: 0 0 0 4px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.status-change {
+  animation: statusPulse 600ms ease;
+}
+
+/* ── Count-up number styling ─────────────────────── */
+
+.count-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ── Reduced motion ──────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .page-enter {
+    animation: none;
+  }
+
+  .animate-float {
+    animation: none;
+  }
+
+  .reveal-line {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .card-3d:hover {
+    transform: none;
+  }
+
+  .btn:active:not([disabled]),
+  .btn-primary:active:not([disabled]) {
+    transform: none;
+  }
+}
+
+/* ── Mobile 3D reduction ─────────────────────────── */
+
+@media (max-width: 768px) {
+  .scope-graph {
+    transform: scale(0.7);
+    transform-origin: center center;
+  }
+
+  .card-3d:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .scope-graph {
+    transform: scale(0.55);
+  }
+}
