@@ -29,19 +29,19 @@ function AddRequestForm({ projectId, onAdded }: { projectId: number; onAdded: ()
   }
 
   return (
-    <form onSubmit={submit} className="row" style={{ alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, minWidth: 200 }}>
-        {error && <div className="error-banner">{error}</div>}
+    <form onSubmit={submit} style={{ marginBottom: 16 }}>
+      {error && <div className="error-banner">{error}</div>}
+      <div className="form-group" style={{ marginBottom: 8 }}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Ex.: Cliente pediu para adicionar um sistema de reservas que não estava no escopo"
+          placeholder="Ex.: Cliente pediu para adicionar um sistema de reservas que nao estava no escopo"
           maxLength={4000}
-          style={{ minHeight: 52 }}
+          style={{ minHeight: 56 }}
         />
       </div>
-      <button type="submit" className="btn btn-primary" disabled={busy}>
-        Registrar pedido
+      <button type="submit" className="btn btn-primary btn-sm" disabled={busy || !text.trim()}>
+        {busy ? 'Registrando...' : 'Registrar pedido'}
       </button>
     </form>
   );
@@ -54,20 +54,20 @@ function RequestRow({
   req: RequestItem;
   onClassified: (id: number, classification: RequestItem['classification']) => void;
 }) {
+  const tagClass =
+    req.classification === 'IN_SCOPE' ? 'tag-in' :
+    req.classification === 'OUT_OF_SCOPE' ? 'tag-out' : 'tag-discuss';
+
   return (
-    <div className="list-item" style={{ fontSize: 14 }}>
-      <div style={{ flex: 1 }}>
-        {req.text}
+    <div className="list-item" style={{ alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, lineHeight: 1.6 }}>{req.text}</div>
         {req.status === 'RESOLVED' && (
-          <span className="muted" style={{ marginLeft: 6 }}>
-            · cobrado via change order
-          </span>
+          <span className="muted" style={{ fontSize: 12 }}>cobrado via change order</span>
         )}
       </div>
-      <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
-        <span className={`tag ${
-          req.classification === 'IN_SCOPE' ? 'tag-in' : req.classification === 'OUT_OF_SCOPE' ? 'tag-out' : 'tag-discuss'
-        }`}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+        <span className={`tag ${tagClass}`}>
           {CLASSIFICATION_LABELS[req.classification]}
         </span>
         {req.classification !== 'IN_SCOPE' && (
@@ -78,9 +78,9 @@ function RequestRow({
                 type="button"
                 className={req.classification === c ? 'active' : ''}
                 onClick={() => onClassified(req.id, c)}
-                title={c === 'OUT_OF_SCOPE' ? 'Fora do escopo — vira cobrança' : 'Em discussão'}
+                title={c === 'OUT_OF_SCOPE' ? 'Fora do escopo - vira cobranca' : 'Em discussao'}
               >
-                {c === 'OUT_OF_SCOPE' ? 'Fora de escopo' : 'Em discussão'}
+                {c === 'OUT_OF_SCOPE' ? 'Fora de escopo' : 'Discussao'}
               </button>
             ))}
           </div>
@@ -108,14 +108,17 @@ function ChangeOrderCard({
       await api.updateChangeOrder(project.id, order.id, { status });
       refresh();
     } catch {
-      /* error already handled by api layer */
+      /* handled by api layer */
     } finally {
       setBusy(false);
     }
   }
 
   function copyShareLink() {
-    const url = `${window.location.origin}/scope-watch/#share/${order.share_token}`;
+    const base = import.meta.env.VITE_API_URL
+      ? `${window.location.origin}/scope-watch/`
+      : `${window.location.origin}/scope-watch/`;
+    const url = `${base}#share/${order.share_token}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -123,45 +126,51 @@ function ChangeOrderCard({
   }
 
   return (
-    <div className="list-item" style={{ alignItems: 'flex-start' }}>
-      <div style={{ flex: 1 }}>
-        <div className="pill">
-          <strong>{order.title}</strong>
-          <span className="tag tag-order">{ORDER_STATUS_LABELS[order.status]}</span>
+    <div className="list-item" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="pill" style={{ marginBottom: 4 }}>
+            <strong style={{ fontSize: 15 }}>{order.title}</strong>
+            <span className="tag tag-order">{ORDER_STATUS_LABELS[order.status]}</span>
+          </div>
+          {order.description && (
+            <div className="muted" style={{ marginTop: 4, fontSize: 13 }}>{order.description}</div>
+          )}
+          <div className="muted" style={{ marginTop: 4 }}>
+            {order.hours}h x R$ {money(order.rate)}/h
+            {order.requests.length > 0 && <> &middot; {order.requests.length} pedido(s) vinculado(s)</>}
+          </div>
         </div>
-        {order.description && <div className="muted" style={{ marginTop: 2 }}>{order.description}</div>}
-        <div className="muted">
-          {order.hours} h × R$ {money(order.rate)}
-          {order.requests.length > 0 && ` · ${order.requests.length} pedido(s) vinculado(s)`}
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em' }}>
+            R$ {money(order.amount)}
+          </div>
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>R$ {money(order.amount)}</div>
-        <div className="row" style={{ gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
-          {order.status === 'DRAFT' && (
-            <button className="btn btn-sm" disabled={busy} onClick={() => setStatus('SENT')}>
-              Enviar
-            </button>
-          )}
-          {order.status === 'SENT' && (
-            <>
-              <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('APPROVED')}>
-                Aprovar
-              </button>
-              <button className="btn btn-sm" disabled={busy} onClick={() => setStatus('REJECTED')}>
-                Recusar
-              </button>
-            </>
-          )}
-          {order.status === 'APPROVED' && (
-            <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('PAID')}>
-              Marcar como pago
-            </button>
-          )}
-          <button className="btn btn-sm" onClick={copyShareLink} title="Copiar link para o cliente">
-            {copied ? 'Copiado!' : 'Compartilhar'}
+      <div className="row" style={{ gap: 8 }}>
+        {order.status === 'DRAFT' && (
+          <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('SENT')}>
+            Enviar ao cliente
           </button>
-        </div>
+        )}
+        {order.status === 'SENT' && (
+          <>
+            <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('APPROVED')}>
+              Aprovar
+            </button>
+            <button className="btn btn-sm btn-danger" disabled={busy} onClick={() => setStatus('REJECTED')}>
+              Recusar
+            </button>
+          </>
+        )}
+        {order.status === 'APPROVED' && (
+          <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => setStatus('PAID')}>
+            Marcar como pago
+          </button>
+        )}
+        <button className="btn btn-sm" onClick={copyShareLink} title="Copiar link para o cliente">
+          {copied ? 'Copiado!' : 'Compartilhar'}
+        </button>
       </div>
     </div>
   );
@@ -220,14 +229,11 @@ function NewChangeOrderForm({
   if (!open) {
     return (
       <button
-        className="btn"
+        className="btn btn-sm"
         onClick={() => setOpen(true)}
         disabled={outOfScope.length === 0}
-        title={
-          outOfScope.length === 0
-            ? 'Marque pedidos como "Fora de escopo" para poder cobrá-los'
-            : ''
-        }
+        title={outOfScope.length === 0 ? 'Marque pedidos como "Fora de escopo" para poder cobrar' : ''}
+        style={{ marginTop: 12 }}
       >
         + Criar change order
       </button>
@@ -235,27 +241,44 @@ function NewChangeOrderForm({
   }
 
   return (
-    <div style={{ marginTop: 8 }}>
+    <div style={{ marginTop: 16, animation: 'fadeIn 0.2s ease' }}>
       {error && <div className="error-banner">{error}</div>}
-      <form onSubmit={submit} className="card">
-        <h4 style={{ marginTop: 0 }}>Nova change order</h4>
-        <div className="form-group">
-          <label>Pedidos vinculados (fora de escopo)</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {outOfScope.map((r) => (
-              <label key={r.id} className="pill" style={{ fontWeight: 400, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(r.id)}
-                  onChange={() => toggle(r.id)}
-                />
-                {r.text.length > 90 ? r.text.slice(0, 90) + '…' : r.text}
-              </label>
-            ))}
+      <form onSubmit={submit}>
+        <h4 style={{ marginTop: 0, marginBottom: 16, fontSize: 15 }}>Nova change order</h4>
+        {outOfScope.length > 0 && (
+          <div className="form-group">
+            <label>Pedidos vinculados (fora de escopo)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {outOfScope.map((r) => (
+                <label
+                  key={r.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 12px',
+                    background: selected.includes(r.id) ? 'var(--primary-dim)' : 'var(--bg)',
+                    border: `1px solid ${selected.includes(r.id) ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    transition: 'all var(--transition)',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(r.id)}
+                    onChange={() => toggle(r.id)}
+                    style={{ accentColor: 'var(--primary)' }}
+                  />
+                  {r.text.length > 80 ? r.text.slice(0, 80) + '...' : r.text}
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="form-group">
-          <label>Título</label>
+          <label>Titulo</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} placeholder="Ex.: Sistema de reservas" />
         </div>
         <div className="row">
@@ -269,14 +292,14 @@ function NewChangeOrderForm({
           </div>
         </div>
         <div className="form-group">
-          <label>Descrição <span className="muted">(opcional)</span></label>
+          <label>Descricao <span className="muted">(opcional)</span></label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={10000} />
         </div>
         <div className="row">
-          <button type="submit" className="btn btn-primary" disabled={busy || !title.trim() || !(Number(hours) > 0)}>
-            {busy ? 'Criando…' : 'Criar'}
+          <button type="submit" className="btn btn-primary btn-sm" disabled={busy || !title.trim() || !(Number(hours) > 0)}>
+            {busy ? 'Criando...' : 'Criar'}
           </button>
-          <button type="button" className="btn" onClick={() => setOpen(false)}>
+          <button type="button" className="btn btn-sm" onClick={() => setOpen(false)}>
             Cancelar
           </button>
         </div>
@@ -299,13 +322,15 @@ export function ProjectDetailPage({ projectId }: { projectId: number }) {
 
   if (!project) {
     return (
-      <div className="container">
+      <div>
         <div className="topbar">
           <div className="container topbar-inner">
-            <a href="#projects">← Voltar</a>
+            <a href="#projects" style={{ fontSize: 14 }}>&larr; Voltar</a>
           </div>
         </div>
-        {error ? <div className="error-banner">{error}</div> : <div className="empty">Carregando…</div>}
+        <div className="container" style={{ paddingTop: 32 }}>
+          {error ? <div className="error-banner">{error}</div> : <div className="empty">Carregando...</div>}
+        </div>
       </div>
     );
   }
@@ -315,25 +340,25 @@ export function ProjectDetailPage({ projectId }: { projectId: number }) {
       await api.updateRequest(projectId, id, { classification });
       refresh();
     } catch {
-      /* error already handled by api layer */
+      /* handled by api layer */
     }
   }
 
   const openRequests = project.requests.filter((r) => r.status === 'OPEN');
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="topbar">
         <div className="container topbar-inner">
           <div>
-            <a href="#projects">← Projetos</a>
-            <h1 style={{ margin: '2px 0 0' }}>{project.title}</h1>
+            <a href="#projects" style={{ fontSize: 13, color: 'var(--text-muted)' }}>&larr; Projetos</a>
+            <h1 style={{ margin: '4px 0 0', fontSize: 22, letterSpacing: '-0.02em' }}>{project.title}</h1>
           </div>
           <span className="tag">{project.status}</span>
         </div>
       </div>
 
-      <div className="container">
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 64 }}>
         {stats && (
           <div className="stat-grid">
             <div className="stat">
@@ -341,31 +366,32 @@ export function ProjectDetailPage({ projectId }: { projectId: number }) {
               <div className="value">{openRequests.length}</div>
             </div>
             <div className="stat">
-              <div className="label">Fora de escopo (abertos)</div>
+              <div className="label">Fora de escopo</div>
               <div className="value">
                 {openRequests.filter((r) => r.classification === 'OUT_OF_SCOPE').length}
               </div>
             </div>
             <div className="stat">
               <div className="label">A receber</div>
-              <div className="value">R$ {money(stats.pending_amount)}</div>
+              <div className="value" style={{ color: 'var(--success)' }}>R$ {money(stats.pending_amount)}</div>
             </div>
             <div className="stat">
-              <div className="label">Aprovado (aguardando pagamento)</div>
-              <div className="value" style={{ color: 'var(--success)' }}>
-                R$ {money(stats.approved_amount)}
-              </div>
+              <div className="label">Aprovado</div>
+              <div className="value" style={{ color: 'var(--primary)' }}>R$ {money(stats.approved_amount)}</div>
             </div>
           </div>
         )}
 
+        {/* Requests section */}
         <div className="card">
-          <h3>Pedidos do cliente</h3>
+          <div className="section-header">
+            <h3>Pedidos do cliente</h3>
+          </div>
           <AddRequestForm projectId={projectId} onAdded={refresh} />
           {project.requests.length === 0 ? (
             <div className="empty">
-              Registre aqui qualquer pedido extra do cliente durante o projeto. Marque como{' '}
-              <strong>fora de escopo</strong> para transformá-lo em cobrança.
+              Registre aqui qualquer pedido extra do cliente.<br />
+              <span style={{ fontSize: 13 }}>Marque como <strong>fora de escopo</strong> para transformar em cobranca.</span>
             </div>
           ) : (
             <div>
@@ -378,32 +404,41 @@ export function ProjectDetailPage({ projectId }: { projectId: number }) {
           )}
         </div>
 
+        {/* Change Orders section */}
         <div className="card">
-          <h3>Change orders</h3>
-          <div className="muted">
-            Trabalho fora de escopo estimado em horas × hora vale R$ <strong>{money(project.hourly_rate)}</strong>.
+          <div className="section-header">
+            <h3>Change orders</h3>
+            <span className="muted">
+              Hora: R$ {money(project.hourly_rate)}
+            </span>
           </div>
           {project.change_orders.length === 0 ? (
             <div className="empty">
-              Marque um pedido como <strong>Fora de escopo</strong> e crie a primeira change order para
-              transformar trabalho não previsto em cobrança.
+              Marque um pedido como <strong>fora de escopo</strong> e crie a primeira change order.
             </div>
           ) : (
-            [...project.change_orders]
-              .sort((a, b) => b.created_at.localeCompare(a.created_at))
-              .map((o) => <ChangeOrderCard key={o.id} order={o} project={project} refresh={refresh} />)
+            <div>
+              {[...project.change_orders]
+                .sort((a, b) => b.created_at.localeCompare(a.created_at))
+                .map((o) => <ChangeOrderCard key={o.id} order={o} project={project} refresh={refresh} />)}
+            </div>
           )}
           <NewChangeOrderForm project={project} requests={project.requests} onCreated={refresh} />
         </div>
 
+        {/* Scope section */}
         <div className="card">
-          <h3>Escopo acordado</h3>
+          <div className="section-header">
+            <h3>Escopo acordado</h3>
+          </div>
           {project.scope_entries.length === 0 ? (
             <div className="empty">Nenhum item de escopo registrado.</div>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
               {project.scope_entries.map((s) => (
-                <li key={s.id}>{s.text}</li>
+                <li key={s.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: 14 }}>
+                  {s.text}
+                </li>
               ))}
             </ul>
           )}

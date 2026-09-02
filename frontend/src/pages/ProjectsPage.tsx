@@ -41,7 +41,7 @@ function NewProjectCard({ onCreated }: { onCreated: () => void }) {
 
   if (!open) {
     return (
-      <div className="card">
+      <div style={{ marginBottom: 16 }}>
         <button className="btn btn-primary" onClick={() => setOpen(true)}>
           + Novo projeto
         </button>
@@ -50,12 +50,12 @@ function NewProjectCard({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <div className="card">
-      <h3>Novo projeto</h3>
+    <div className="card" style={{ animation: 'fadeIn 0.2s ease' }}>
+      <h3 style={{ marginBottom: 20 }}>Novo projeto</h3>
       {error && <div className="error-banner">{error}</div>}
       <form onSubmit={submit}>
         <div className="form-group">
-          <label>Título do projeto</label>
+          <label>Nome do projeto</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -75,18 +75,16 @@ function NewProjectCard({ onCreated }: { onCreated: () => void }) {
           />
         </div>
         <div className="form-group">
-          <label>
-            Escopo acordado <span className="muted">(um item por linha)</span>
-          </label>
+          <label>Escopo acordado <span className="muted">(um item por linha)</span></label>
           <textarea
             value={scopeText}
             onChange={(e) => setScopeText(e.target.value)}
-            placeholder={'Página inicial\n5 páginas internas\nFormulário de contato'}
+            placeholder={'Pagina inicial\n5 paginas internas\nFormulario de contato'}
           />
         </div>
         <div className="row">
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Criando…' : 'Criar projeto'}
+            {busy ? 'Criando...' : 'Criar projeto'}
           </button>
           <button type="button" className="btn" onClick={() => setOpen(false)}>
             Cancelar
@@ -99,36 +97,35 @@ function NewProjectCard({ onCreated }: { onCreated: () => void }) {
 
 function ProjectCard({ project }: { project: Project }) {
   const outOfScope = project.requests.filter((r) => r.classification === 'OUT_OF_SCOPE').length;
-  const approved = project.change_orders
-    .filter((o) => o.status === 'APPROVED' || o.status === 'PAID')
+  const pending = project.change_orders
+    .filter((o) => o.status === 'SENT' || o.status === 'APPROVED')
     .reduce((sum, o) => sum + o.amount, 0);
 
   return (
-    <div className="list-item">
-      <div>
-        <a
-          href={`#projects/${project.id}`}
-          style={{ fontWeight: 600, fontSize: 15 }}
-        >
+    <a
+      href={`#projects/${project.id}`}
+      className="list-item"
+      style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em', marginBottom: 4 }}>
           {project.title}
-        </a>
+        </div>
         <div className="muted">
-          {project.requests.length} pedidos · {project.change_orders.length} change orders
+          {project.requests.length} pedidos &middot; {project.change_orders.length} change orders
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        {outOfScope > 0 && <span className="tag tag-out">+{outOfScope} fora de escopo</span>}
-        <div style={{ marginTop: 4 }}>
-          {approved > 0 ? (
-            <span className="tag tag-funded" style={{ fontWeight: 700 }}>
-              R$ {approved.toLocaleString('pt-BR')} aprovado
-            </span>
-          ) : (
-            <span className="tag">Sem extras cobrados</span>
-          )}
-        </div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        {outOfScope > 0 && <span className="tag tag-out" style={{ marginBottom: 4, display: 'block' }}>+{outOfScope} fora de escopo</span>}
+        {pending > 0 ? (
+          <span className="tag tag-funded" style={{ fontWeight: 700 }}>
+            R$ {pending.toLocaleString('pt-BR')}
+          </span>
+        ) : (
+          <span className="tag">Sem pendencias</span>
+        )}
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -148,36 +145,41 @@ export function ProjectsPage() {
   useEffect(load, []);
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="topbar">
         <div className="container topbar-inner">
           <span className="brand">
-            Scopewise <small>· controle de escopo</small>
+            Scopewise <small>controle de escopo</small>
           </span>
-          <div className="row" style={{ gap: 8 }}>
+          <div className="row" style={{ gap: 12 }}>
             <span className="muted">{user?.name}</span>
-            <button className="btn btn-sm" onClick={logout}>
-              Sair
-            </button>
+            <button className="btn btn-sm" onClick={logout}>Sair</button>
           </div>
         </div>
       </div>
 
-      <div className="container">
+      <div className="container" style={{ paddingTop: 32, paddingBottom: 64 }}>
         {error && <div className="error-banner">{error}</div>}
 
         <NewProjectCard onCreated={load} />
 
         <div className="card">
-          <h3 style={{ marginBottom: 0 }}>Seus projetos</h3>
+          <div className="section-header" style={{ marginBottom: 8 }}>
+            <h3>Seus projetos</h3>
+          </div>
           {projects === null ? (
-            <div className="empty">Carregando…</div>
+            <div className="empty">Carregando...</div>
           ) : projects.length === 0 ? (
             <div className="empty">
-              Nenhum projeto ainda. Crie um e registre o escopo acordado.
+              Nenhum projeto ainda.<br />
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Crie um para comecar a acompanhar pedidos e evitar trabalho fora do escopo.
+              </span>
             </div>
           ) : (
-            projects.map((p) => <ProjectCard key={p.id} project={p} />)
+            <div>
+              {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
+            </div>
           )}
         </div>
       </div>

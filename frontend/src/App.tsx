@@ -7,11 +7,26 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { AboutPage } from './pages/AboutPage';
 import { SharePage } from './pages/SharePage';
+import { useCallback, useEffect, useState } from 'react';
 
 function useHashRoute() {
-  const hash = window.location.hash;
-  const parts = hash.replace(/^#/, '').split('/').filter(Boolean);
-  return { page: parts[0] ?? '', id: parts[1] ?? null };
+  const parse = useCallback(() => {
+    const hash = window.location.hash;
+    const parts = hash.replace(/^#/, '').split('/').filter(Boolean);
+    return { page: parts[0] ?? '', id: parts[1] ?? null };
+  }, []);
+
+  const [route, setRoute] = useState(parse);
+
+  useEffect(() => {
+    function onHashChange() {
+      setRoute(parse());
+    }
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [parse]);
+
+  return route;
 }
 
 const PUBLIC_ROUTES = new Set(['', 'privacy', 'terms', 'about', 'login', 'register', 'features', 'how-it-works', 'faq']);
@@ -21,7 +36,11 @@ function AppInner() {
   const route = useHashRoute();
 
   if (loading) {
-    return <div className="center-box">Carregando…</div>;
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+      </div>
+    );
   }
 
   const isPublic = PUBLIC_ROUTES.has(route.page);

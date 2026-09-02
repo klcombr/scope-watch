@@ -37,7 +37,7 @@ export function SharePage({ token }: { token: string }) {
   useEffect(() => {
     fetch(`${API_BASE}/api/share/${token}`)
       .then((r) => {
-        if (!r.ok) throw new Error('Change order não encontrada');
+        if (!r.ok) throw new Error('Change order nao encontrada');
         return r.json();
       })
       .then(setOrder)
@@ -70,7 +70,9 @@ export function SharePage({ token }: { token: string }) {
   if (loading) {
     return (
       <div className="share-page">
-        <div className="container share-center">Carregando…</div>
+        <div className="share-center">
+          <div className="loading-spinner" />
+        </div>
       </div>
     );
   }
@@ -78,8 +80,8 @@ export function SharePage({ token }: { token: string }) {
   if (error || !order) {
     return (
       <div className="share-page">
-        <div className="container share-center">
-          <div className="share-error">{error || 'Change order não encontrada'}</div>
+        <div className="share-center">
+          <div className="share-error">{error || 'Change order nao encontrada'}</div>
         </div>
       </div>
     );
@@ -89,10 +91,10 @@ export function SharePage({ token }: { token: string }) {
 
   return (
     <div className="share-page">
-      <div className="container share-container">
+      <div className="share-container">
         <header className="share-header">
           <strong>Scopewise</strong>
-          <span className="muted">· change order</span>
+          <span className="muted"> &middot; change order</span>
         </header>
 
         <main className="share-main">
@@ -104,7 +106,7 @@ export function SharePage({ token }: { token: string }) {
 
           <div className="share-amount">R$ {money(order.amount)}</div>
           <div className="share-detail">
-            {order.hours} h × R$ {money(order.rate)}/h
+            {order.hours}h x R$ {money(order.rate)}/h
           </div>
 
           {canDecide && (
@@ -114,7 +116,7 @@ export function SharePage({ token }: { token: string }) {
                 disabled={deciding}
                 onClick={() => respond('APPROVED')}
               >
-                {deciding ? 'Processando…' : 'Aprovar'}
+                {deciding ? 'Processando...' : 'Aprovar'}
               </button>
               <button
                 className="btn share-btn share-btn-reject"
@@ -134,7 +136,7 @@ export function SharePage({ token }: { token: string }) {
 
           {order.status !== 'SENT' && !decision && (
             <div className="share-result share-result-info">
-              Esta change order já foi respondida.
+              Esta change order ja foi respondida.
             </div>
           )}
         </main>
