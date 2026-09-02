@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f6f7f9"/>
+  <rect x="40" y="40" width="1120" height="550" rx="16" fill="#ffffff" stroke="#e2e5ea" stroke-width="2"/>
+  <rect x="80" y="100" width="64" height="64" rx="12" fill="#2563eb"/>
+  <path d="M96 116h32M96 132h32M96 148h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text x="160" y="148" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="42" font-weight="700" fill="#1a2230">Scopewise</text>
+  <text x="80" y="240" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="28" font-weight="600" fill="#1a2230">Controle de Escopo para Freelancers</text>
+  <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="20" fill="#5b6572">Registre pedidos fora do escopo.</text>
+  <text x="80" y="320" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="20" fill="#5b6572">Transforme em change orders cobráveis.</text>
+  <rect x="80" y="380" width="200" height="52" rx="8" fill="#2563eb"/>
+  <text x="180" y="412" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="18" font-weight="600" fill="#ffffff" text-anchor="middle">Começar grátis</text>
+  <text x="80" y="520" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="16" fill="#5b6572">scope creep · change orders · freelancers</text>
+</svg>

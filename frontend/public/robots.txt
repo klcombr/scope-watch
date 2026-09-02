@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /#projects
+Disallow: /#login
+Disallow: /#register
+Disallow: /api/
+
+Sitemap: https://scopewise.app/sitemap.xml
