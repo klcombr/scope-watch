@@ -32,12 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.login(email, password);
     setToken(res.access_token);
     setUser(res.user);
+    window.location.hash = '#projects';
   }
 
   async function register(name: string, email: string, password: string) {
     const res = await api.register(name, email, password);
     setToken(res.access_token);
     setUser(res.user);
+    window.location.hash = '#projects';
   }
 
   function logout() {
